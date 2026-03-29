@@ -1,0 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Saira:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  @apply bg-cyber-black text-gray-200 overflow-x-hidden;
+  font-family: 'Saira', sans-serif;
+}
+
+::selection {
+  @apply bg-cyber-pink text-white;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-cyber-dark;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-cyber-blue rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-cyber-pink;
+}
+
+/* Cyberpunk Input */
+.cyber-input {
+  @apply w-full bg-cyber-dark border border-gray-800 text-white px-4 py-3 focus:outline-none focus:border-cyber-blue focus:ring-1 focus:ring-cyber-blue transition-all duration-300 text-sm;
+  font-family: 'Fira Code', monospace;
+}
+
+/* Cyberpunk Button */
+.cyber-btn {
+  @apply relative inline-flex items-center justify-center px-8 py-3 overflow-hidden font-bold tracking-widest text-white uppercase bg-cyber-dark border border-cyber-blue transition-colors duration-300;
+}
+
+.cyber-btn:hover {
+  @apply bg-cyber-blue/10;
+}
+
+/* Neon Text glow */
+.text-glow-blue {
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.7);
+}
+.text-glow-pink {
+  text-shadow: 0 0 10px rgba(255, 0, 60, 0.7);
+}
+
+/* Glass panel */
+.glass-panel {
+  @apply bg-cyber-dark/80 backdrop-blur-md border border-gray-800;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
