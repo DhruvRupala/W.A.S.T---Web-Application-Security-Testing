@@ -9,7 +9,10 @@ module.exports = function (req, res, next) {
     req.user = decoded.user;
     next();
   } catch (e) {
-    console.error(e);
-    res.status(500).send({ message: 'Invalid Token' });
+    if (e.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Token has expired', requireLogout: true });
+    }
+    console.error('Auth Middleware Error:', e);
+    res.status(401).json({ message: 'Invalid Token', requireLogout: true });
   }
 };

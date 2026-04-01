@@ -13,11 +13,16 @@ const pdfRoutes = require('./routes/pdf');
 
 const app = express();
 const server = http.createServer(app);
+
+// CORS Configuration — set CORS_ORIGIN in production to your Vercel URL
+// e.g., CORS_ORIGIN=https://wast-frontend.vercel.app
+const allowedOrigin = process.env.CORS_ORIGIN || '*';
+
 const io = new Server(server, {
-  cors: { origin: '*' }
+  cors: { origin: allowedOrigin }
 });
 
-app.use(cors());
+app.use(cors({ origin: allowedOrigin }));
 app.use(express.json());
 
 // Rate limiters for auth endpoints (brute-force protection)
@@ -52,10 +57,16 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/pdf', pdfRoutes);
 
 // WebSocket connection
+let activeConnections = 0;
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+  activeConnections++;
+  io.emit('active_users', activeConnections);
+  console.log('Client connected:', socket.id, '| Active:', activeConnections);
+
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    activeConnections = Math.max(0, activeConnections - 1);
+    io.emit('active_users', activeConnections);
+    console.log('Client disconnected:', socket.id, '| Active:', activeConnections);
   });
 });
 

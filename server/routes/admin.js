@@ -136,4 +136,71 @@ router.patch('/users/:id/unlock', auth, adminAuth, async (req, res) => {
   }
 });
 
+// ── Analytics ── //
+
+const TrafficLog = require('../models/TrafficLog');
+const ActivityLog = require('../models/ActivityLog');
+
+// Record a page view (Public)
+router.post('/analytics/visit', async (req, res) => {
+  try {
+    const { path } = req.body;
+    if (!path) return res.status(400).json({ message: 'Path is required' });
+    
+    // Attempt to extract user if logged in
+    let userId = null;
+    const token = req.header('Authorization');
+    if (token) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET);
+        userId = decoded.user?.id;
+      } catch (e) { /* non-blocking */ }
+    }
+
+    await TrafficLog.create({ path, user: userId });
+    res.status(201).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error tracking visit' });
+  }
+});
+
+// Get Traffic Stats (Admin only)
+router.get('/analytics/traffic', auth, adminAuth, async (req, res) => {
+  try {
+    const { days = 7 } = req.query;
+    const limitDate = new Date();
+    limitDate.setDate(limitDate.getDate() - parseInt(days));
+
+    const trafficStats = await TrafficLog.aggregate([
+      { $match: { createdAt: { $gte: limitDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          views: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    res.json(trafficStats);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error fetching traffic' });
+  }
+});
+
+// Get Activity Logs (Admin only)
+router.get('/analytics/activity', auth, adminAuth, async (req, res) => {
+  try {
+    const logs = await ActivityLog.find()
+      .populate('user', 'email name')
+      .sort({ createdAt: -1 })
+      .limit(50);
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error fetching activity' });
+  }
+});
+
 module.exports = router;

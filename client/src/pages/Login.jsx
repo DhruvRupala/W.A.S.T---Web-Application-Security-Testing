@@ -16,6 +16,7 @@ const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState('');
   const [errors, setErrors] = useState([]);
@@ -45,7 +46,7 @@ const Login = () => {
       if (isLogin) {
         await login(email, password);
       } else {
-        await register(email, password);
+        await register(email, password, name);
       }
       navigate('/dashboard');
     } catch (err) {
@@ -114,6 +115,20 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
+          
+          {!isLogin && (
+            <div>
+              <label className="block text-xs font-mono text-cyber-blue mb-2 uppercase">Operator Name (Optional)</label>
+              <input 
+                type="text" 
+                className="cyber-input" 
+                placeholder="Neo"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-mono text-cyber-blue mb-2 uppercase">Passcode</label>
             <div className="relative">

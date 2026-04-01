@@ -19,7 +19,7 @@ function validatePassword(password) {
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
 
     // 1. (Removed) Email whitelist check disabled as per request
 
@@ -34,12 +34,15 @@ router.post('/register', async (req, res) => {
     }
 
     // 4. Create user
-    user = new User({ email, password });
+    user = new User({ email, password, name });
     await user.save();
+
+    const ActivityLog = require('../models/ActivityLog');
+    await ActivityLog.create({ user: user._id, action: 'REGISTER' });
 
     const payload = { user: { id: user.id } };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
   } catch (error) {
     console.error('Registration Error:', error);
     res.status(500).json({ message: 'Server error', details: String(error) });
@@ -76,10 +79,15 @@ router.post('/login', async (req, res) => {
 
     // Successful login — reset failed attempts
     await user.resetLoginAttempts();
+    user.lastLogin = new Date();
+    await user.save();
+
+    const ActivityLog = require('../models/ActivityLog');
+    await ActivityLog.create({ user: user._id, action: 'LOGIN' });
 
     const payload = { user: { id: user.id } };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role } });
   } catch (error) {
     console.error('Login Error:', error);
     res.status(500).json({ message: 'Server error', details: String(error) });

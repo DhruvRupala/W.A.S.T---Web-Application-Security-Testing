@@ -47,6 +47,9 @@ router.post('/start', auth, async (req, res) => {
     });
     await scan.save();
 
+    const ActivityLog = require('../models/ActivityLog');
+    await ActivityLog.create({ user: req.user.id, action: 'SCAN_STARTED', details: `Target: ${targetUrl}` });
+
     // Respond immediately
     res.json(scan);
 

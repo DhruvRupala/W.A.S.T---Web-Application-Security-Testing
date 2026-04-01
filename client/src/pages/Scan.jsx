@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { Target, Zap, Shield, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const socket = io('http://localhost:5000');
+const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
 
 const Scan = () => {
   const [target, setTarget] = useState('');
@@ -48,7 +48,7 @@ const Scan = () => {
 
     setScanning(true);
     try {
-      await axios.post('http://localhost:5000/api/scans/start', { targetUrl: target });
+      await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/scans/start`, { targetUrl: target });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to start scan');
       setScanning(false);

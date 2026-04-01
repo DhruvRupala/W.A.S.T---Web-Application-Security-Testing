@@ -12,7 +12,7 @@ const Reports = () => {
 
   const fetchScans = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/scans');
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/scans`);
       setScans(res.data);
       if (res.data.length > 0) {
         setSelectedScan(res.data[0]);
@@ -25,7 +25,7 @@ const Reports = () => {
   const downloadPDF = async (scanId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`http://localhost:5000/api/pdf/${scanId}`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/pdf/${scanId}`, {
         responseType: 'blob',
         headers: { Authorization: `Bearer ${token}` }
       });

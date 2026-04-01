@@ -1,5 +1,6 @@
-import React, { useContext } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useContext, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import { AuthContext } from './context/AuthContext';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -27,9 +28,19 @@ const ProtectedRoute = ({ children }) => {
   );
 };
 
+const RouteTracker = () => {
+  const location = useLocation();
+  useEffect(() => {
+    axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/analytics/visit`, { path: location.pathname })
+      .catch(() => {});
+  }, [location]);
+  return null;
+};
+
 function App() {
   return (
     <Router>
+      <RouteTracker />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />

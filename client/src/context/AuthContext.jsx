@@ -8,34 +8,72 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
+  const logout = React.useCallback(() => {
+    delete axios.defaults.headers.common['Authorization'];
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem('token');
+  }, []);
+
   useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    const validateToken = (jwtToken) => {
+      if (!jwtToken) return false;
+      try {
+        const payload = JSON.parse(atob(jwtToken.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          return false;
+        }
+        return true;
+      } catch (err) {
+        return false;
+      }
+    };
+
     if (token) {
+      if (!validateToken(token)) {
+        logout();
+        setLoading(false);
+        return () => axios.interceptors.response.eject(interceptor);
+      }
+
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Fetch user profile from backend
-      axios.get('http://localhost:5000/api/auth/me')
+      
+      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`)
         .then(res => setUser(res.data))
-        .catch(() => {
-          // Token expired or invalid — use basic info from stored token
-          try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            setUser({ id: payload.user?.id });
-          } catch {
-            setUser(null);
-            setToken(null);
-            localStorage.removeItem('token');
+        .catch((err) => {
+          if (err.response?.status !== 401) {
+            try {
+              const payload = JSON.parse(atob(token.split('.')[1]));
+              setUser({ id: payload.user?.id });
+            } catch {
+              logout();
+            }
           }
         })
         .finally(() => setLoading(false));
     } else {
-      delete axios.defaults.headers.common['Authorization'];
-      setUser(null);
+      logout();
       setLoading(false);
     }
-  }, [token]);
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [token, logout]);
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/login`, { email, password });
       setToken(res.data.token);
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);
@@ -45,9 +83,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (email, password) => {
+  const register = async (email, password, name = '') => {
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', { email, password });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/register`, { email, password, name });
       setToken(res.data.token);
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);
@@ -55,12 +93,6 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       throw err.response?.data || { message: 'Registration failed' };
     }
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('token');
   };
 
   return (
