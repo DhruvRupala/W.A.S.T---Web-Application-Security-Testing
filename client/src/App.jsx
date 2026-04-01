@@ -46,7 +46,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 const RouteTracker = () => {
   const location = useLocation();
   useEffect(() => {
-    axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/admin/analytics/visit`, { path: location.pathname })
+    axios.post(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/admin/system/visits`, { path: location.pathname })
       .catch(() => {});
   }, [location]);
   return null;

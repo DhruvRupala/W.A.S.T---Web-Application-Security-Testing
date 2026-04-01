@@ -11,7 +11,7 @@ const Reports = () => {
 
   const fetchScans = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/scans`);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/scans`);
       setScans(res.data);
       if (res.data.length > 0) setSelectedScan(res.data[0]);
     } catch (err) { console.error(err); }
@@ -20,7 +20,7 @@ const Reports = () => {
   const downloadPDF = async (scanId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/pdf/${scanId}`, {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/pdf/${scanId}`, {
         responseType: 'blob', headers: { Authorization: `Bearer ${token}` }
       });
       const url = window.URL.createObjectURL(new Blob([res.data]));

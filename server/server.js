@@ -15,8 +15,8 @@ const app = express();
 const server = http.createServer(app);
 
 // CORS Configuration — set CORS_ORIGIN in production to your Vercel URL
-// e.g., CORS_ORIGIN=https://wast-frontend.vercel.app
-const allowedOrigin = process.env.CORS_ORIGIN || '*';
+// e.g., CORS_ORIGIN=https://wastp.vercel.app
+const allowedOrigin = process.env.CORS_ORIGIN || 'https://wastp.vercel.app';
 
 const io = new Server(server, {
   cors: { origin: allowedOrigin }

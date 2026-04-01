@@ -144,7 +144,7 @@ const TrafficLog = require('../models/TrafficLog');
 const ActivityLog = require('../models/ActivityLog');
 
 // Record a page view (Public)
-router.post('/analytics/visit', async (req, res) => {
+router.post('/system/visits', async (req, res) => {
   try {
     const { path } = req.body;
     if (!path) return res.status(400).json({ message: 'Path is required' });
@@ -168,7 +168,7 @@ router.post('/analytics/visit', async (req, res) => {
 });
 
 // Get Traffic Stats (Admin only)
-router.get('/analytics/traffic', auth, adminAuth, async (req, res) => {
+router.get('/system/usage', auth, adminAuth, async (req, res) => {
   try {
     const { days = 7 } = req.query;
     const limitDate = new Date();
@@ -193,7 +193,7 @@ router.get('/analytics/traffic', auth, adminAuth, async (req, res) => {
 });
 
 // Get Activity Logs (Admin only)
-router.get('/analytics/activity', auth, adminAuth, async (req, res) => {
+router.get('/system/audit', auth, adminAuth, async (req, res) => {
   try {
     const logs = await ActivityLog.find()
       .populate('user', 'email name')

@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
-      axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`)
+      axios.get(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/auth/me`)
         .then(res => setUser(res.data))
         .catch((err) => {
           if (err.response?.status !== 401) {
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/login`, { email, password });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/auth/login`, { email, password });
       setToken(res.data.token);
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (email, password, name = '') => {
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/register`, { email, password, name });
+      const res = await axios.post(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/auth/register`, { email, password, name });
       setToken(res.data.token);
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);

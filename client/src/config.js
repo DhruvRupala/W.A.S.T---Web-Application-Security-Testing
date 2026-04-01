@@ -3,4 +3,4 @@
 // For local development: http://localhost:5000
 // For production: https://wast-backend.onrender.com (or your Render URL)
 
-export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000');

@@ -4,7 +4,7 @@ import { Users, Activity, ShieldAlert, Trash2, Crown, BarChart3, LineChart as Li
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, Legend } from 'recharts';
 import { io } from 'socket.io-client';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000');
 
 const Admin = () => {
   const [stats, setStats] = useState(null);
@@ -30,8 +30,8 @@ const Admin = () => {
         axios.get(`${API}/api/admin/stats`),
         axios.get(`${API}/api/admin/users`),
         axios.get(`${API}/api/admin/scans`),
-        axios.get(`${API}/api/admin/analytics/traffic?days=${days}`),
-        axios.get(`${API}/api/admin/analytics/activity`),
+        axios.get(`${API}/api/admin/system/usage?days=${days}`),
+        axios.get(`${API}/api/admin/system/audit`),
       ]);
       setStats(statsRes.data); setUsers(usersRes.data); setScans(scansRes.data);
       setTraffic(trafficRes.data); setActivity(activityRes.data); setError('');

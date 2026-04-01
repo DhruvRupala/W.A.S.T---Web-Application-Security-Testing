@@ -11,7 +11,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchScans = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/scans`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/scans`);
         const scans = res.data;
         let c = 0, h = 0, m = 0, l = 0;
         scans.forEach(s => {
