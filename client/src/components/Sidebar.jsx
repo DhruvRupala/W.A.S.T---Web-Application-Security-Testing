@@ -10,8 +10,11 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'New Scan', path: '/scan', icon: Activity },
     { name: 'Vulnerabilities', path: '/reports', icon: ShieldAlert },
-    { name: 'Admin Panel', path: '/admin', icon: Crown },
   ];
+
+  if (user?.role === 'admin') {
+    navLinks.push({ name: 'Admin Panel', path: '/admin', icon: Crown });
+  }
 
   return (
     <div className="w-64 glass-panel border-r border-gray-800 flex flex-col pt-8 pb-4 px-4 h-full relative z-20">

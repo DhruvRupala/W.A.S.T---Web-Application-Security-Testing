@@ -10,10 +10,12 @@ import Reports from './pages/Reports';
 import Admin from './pages/Admin';
 import Sidebar from './components/Sidebar';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
   const { user, loading } = useContext(AuthContext);
   if (loading) return <div className="min-h-screen flex items-center justify-center text-cyber-blue animate-pulse">Initializing System...</div>;
   if (!user) return <Navigate to="/" />;
+  if (requireAdmin && user.role !== 'admin') return <Navigate to="/dashboard" />;
+
   return (
     <div className="flex h-screen bg-cyber-black text-white overflow-hidden">
       <Sidebar />
@@ -47,7 +49,7 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/scan" element={<ProtectedRoute><Scan /></ProtectedRoute>} />
         <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><Admin /></ProtectedRoute>} />
       </Routes>
     </Router>
   );
