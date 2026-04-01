@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
           if (err.response?.status !== 401) {
             try {
               const payload = JSON.parse(atob(token.split('.')[1]));
-              setUser({ id: payload.user?.id });
+              setUser({ id: payload.user?.id, role: payload.user?.role });
             } catch {
               logout();
             }

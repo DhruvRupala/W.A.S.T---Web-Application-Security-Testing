@@ -10,10 +10,12 @@ const adminAuth = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user || user.role !== 'admin') {
+      console.log(`[AdminAuth Failed] Extracted token user ID: ${req.user?.id}, DB user found: ${!!user}, DB user role: ${user ? user.role : 'N/A'}, Path: ${req.originalUrl}`);
       return res.status(403).json({ message: 'Access denied. Admin only.' });
     }
     next();
   } catch (err) {
+    console.error(`[AdminAuth Error] Error finding user:`, err);
     res.status(500).json({ message: 'Server error' });
   }
 };
