@@ -64,16 +64,16 @@ const Login = () => {
   const isSubmitDisabled = loading || (!isLogin && !allPassed);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cyber-black relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-cyber-black relative overflow-hidden px-4 sm:px-6">
       {/* Background Decor */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyber-blue/20 blur-[120px] rounded-full pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyber-pink/10 blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-cyber-blue/20 blur-[80px] sm:blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-cyber-pink/10 blur-[80px] sm:blur-[120px] rounded-full pointer-events-none"></div>
       
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md p-8 glass-panel border border-cyber-blue/30 relative z-10"
+        className="w-full max-w-md p-6 sm:p-8 glass-panel border border-cyber-blue/30 relative z-10"
       >
         <div className="flex justify-center mb-8">
           <div className="p-4 bg-cyber-dark rounded-full border border-cyber-blue relative group">

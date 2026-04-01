@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Activity, ShieldAlert, LayoutDashboard, LogOut, Crown } from 'lucide-react';
+import { Activity, ShieldAlert, LayoutDashboard, LogOut, Crown, X } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const { logout, user } = useContext(AuthContext);
 
   const navLinks = [
@@ -16,50 +16,82 @@ const Sidebar = () => {
     navLinks.push({ name: 'Admin Panel', path: '/admin', icon: Crown });
   }
 
+  const handleNavClick = () => {
+    // Close sidebar on mobile when a link is clicked
+    if (onClose) onClose();
+  };
+
   return (
-    <div className="w-64 glass-panel border-r border-gray-800 flex flex-col pt-8 pb-4 px-4 h-full relative z-20">
-      <div className="mb-12 text-center">
-        <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyber-blue to-cyber-pink tracking-widest animate-pulse-fast">
-          W.A.S.T.
-        </h1>
-        <p className="text-xs text-cyber-blue font-mono mt-2 tracking-widest opacity-80">SECURITY PLATFORM</p>
-      </div>
+    <>
+      {/* Mobile overlay backdrop */}
+      {isOpen && (
+        <div 
+          className="sidebar-overlay lg:hidden" 
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      <nav className="flex-1 space-y-4">
-        {navLinks.map((link) => {
-          const Icon = link.icon;
-          return (
-            <NavLink
-              key={link.name}
-              to={link.path}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-300 font-mono text-sm border-l-2 ${
-                  isActive 
-                    ? 'border-cyber-blue bg-cyber-blue/10 text-cyber-blue text-glow-blue' 
-                    : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500 hover:bg-white/5'
-                }`
-              }
-            >
-              <Icon size={18} />
-              {link.name}
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      <div className="pt-4 border-t border-gray-800">
-        <div className="px-4 py-2 mb-4 text-xs font-mono text-gray-500 truncate">
-          OP: {user?.email || 'GUEST'}
-        </div>
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:relative top-0 left-0 h-full z-50 lg:z-20
+        w-64 glass-panel border-r border-gray-800 flex flex-col pt-8 pb-4 px-4
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Mobile close button */}
         <button 
-          onClick={logout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-cyber-pink hover:bg-cyber-pink/10 rounded-md transition-all duration-300 font-mono text-sm border border-transparent hover:border-cyber-pink/30"
+          onClick={onClose}
+          className="lg:hidden absolute top-4 right-4 p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors"
+          aria-label="Close sidebar"
         >
-          <LogOut size={18} />
-          DISCONNECT
+          <X size={20} />
         </button>
+
+        <div className="mb-12 text-center">
+          <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyber-blue to-cyber-pink tracking-widest animate-pulse-fast">
+            W.A.S.T.
+          </h1>
+          <p className="text-xs text-cyber-blue font-mono mt-2 tracking-widest opacity-80">SECURITY PLATFORM</p>
+        </div>
+
+        <nav className="flex-1 space-y-4">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            return (
+              <NavLink
+                key={link.name}
+                to={link.path}
+                onClick={handleNavClick}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-300 font-mono text-sm border-l-2 ${
+                    isActive 
+                      ? 'border-cyber-blue bg-cyber-blue/10 text-cyber-blue text-glow-blue' 
+                      : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500 hover:bg-white/5'
+                  }`
+                }
+              >
+                <Icon size={18} />
+                {link.name}
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        <div className="pt-4 border-t border-gray-800">
+          <div className="px-4 py-2 mb-4 text-xs font-mono text-gray-500 truncate">
+            OP: {user?.email || 'GUEST'}
+          </div>
+          <button 
+            onClick={logout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-cyber-pink hover:bg-cyber-pink/10 rounded-md transition-all duration-300 font-mono text-sm border border-transparent hover:border-cyber-pink/30"
+          >
+            <LogOut size={18} />
+            DISCONNECT
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 

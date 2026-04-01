@@ -1,6 +1,7 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { Menu } from 'lucide-react';
 import { AuthContext } from './context/AuthContext';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -12,14 +13,26 @@ import Sidebar from './components/Sidebar';
 
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
   const { user, loading } = useContext(AuthContext);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   if (loading) return <div className="min-h-screen flex items-center justify-center text-cyber-blue animate-pulse">Initializing System...</div>;
   if (!user) return <Navigate to="/" />;
   if (requireAdmin && user.role !== 'admin') return <Navigate to="/dashboard" />;
 
   return (
     <div className="flex h-screen bg-cyber-black text-white overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 overflow-y-auto p-8 relative">
+      {/* Mobile hamburger button */}
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="mobile-menu-btn lg:hidden"
+        aria-label="Open menu"
+      >
+        <Menu size={22} />
+      </button>
+
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      <div className="flex-1 overflow-y-auto p-4 pt-16 lg:pt-8 md:p-6 lg:p-8 relative w-full min-w-0">
         {/* Decorative Grid Background */}
         <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#00f0ff 1px, transparent 1px), linear-gradient(90deg, #00f0ff 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
         <div className="relative z-10 w-full max-w-7xl mx-auto">
@@ -56,5 +69,3 @@ function App() {
 }
 
 export default App;
-
-
