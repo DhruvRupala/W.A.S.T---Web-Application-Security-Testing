@@ -3,7 +3,7 @@ const router = express.Router();
 const fs = require('fs');
 const auth = require('../middleware/auth');
 const Scan = require('../models/Scan');
-const { spawn } = require('child_process');
+const { runScan } = require('../utils/scanner');
 const path = require('path');
 
 // Get all scans for user
@@ -56,51 +56,30 @@ router.post('/start', auth, async (req, res) => {
     // Get socket.io instance
     const io = req.app.get('io');
 
-    // Spawn Python scanner
-    const scannerDir = path.join(__dirname, '../../scanner');
-    let pythonCmd = 'python';
-    const venvPython = path.join(__dirname, '../../.venv/Scripts/python.exe');
-    if (fs.existsSync(venvPython)) {
-      pythonCmd = venvPython;
-    }
-
     // Emit scan started
     io.emit('scan:progress', { scanId: scan._id, status: 'running', progress: 10, message: 'Initializing scanner...' });
 
-    const pythonProcess = spawn(pythonCmd, ['main.py', JSON.stringify({ target: targetUrl })], { cwd: scannerDir });
+    try {
+      io.emit('scan:progress', { scanId: scan._id, status: 'running', progress: 50, message: 'Scanning target headers and payloads...' });
+      
+      const results = await runScan(targetUrl);
+      
+      scan.vulnerabilities = results.vulnerabilities || [];
+      scan.riskLevel = calculateRisk(scan.vulnerabilities);
+      scan.status = 'completed';
+      scan.completedAt = new Date();
+      await scan.save();
 
-    let output = '';
-    pythonProcess.stdout.on('data', (data) => {
-      output += data.toString();
-      io.emit('scan:progress', { scanId: scan._id, status: 'running', progress: 50, message: 'Scanning target...' });
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-      console.error(`Python Error: ${data}`);
-      io.emit('scan:progress', { scanId: scan._id, status: 'running', progress: 40, message: 'Processing modules...' });
-    });
-
-    pythonProcess.on('close', async (code) => {
-      try {
-        if (code === 0 && output) {
-          const results = JSON.parse(output);
-          scan.vulnerabilities = results.vulnerabilities || [];
-          scan.riskLevel = calculateRisk(scan.vulnerabilities);
-          scan.status = 'completed';
-        } else {
-          scan.status = 'failed';
-        }
-        scan.completedAt = new Date();
-        await scan.save();
-        io.emit('scan:progress', { scanId: scan._id, status: scan.status, progress: 100, message: 'Scan complete!' });
-        io.emit('scan:completed', scan);
-      } catch (err) {
-        console.error('Failed to parse scanner output or save scan', err);
-        scan.status = 'failed';
-        await scan.save();
-        io.emit('scan:progress', { scanId: scan._id, status: 'failed', progress: 100, message: 'Scan failed.' });
-      }
-    });
+      io.emit('scan:progress', { scanId: scan._id, status: scan.status, progress: 100, message: 'Scan complete!' });
+      io.emit('scan:completed', scan);
+      
+    } catch (err) {
+      console.error('Failed to parse scanner output or save scan', err);
+      scan.status = 'failed';
+      scan.completedAt = new Date();
+      await scan.save();
+      io.emit('scan:progress', { scanId: scan._id, status: 'failed', progress: 100, message: 'Scan failed.' });
+    }
 
   } catch (err) {
     console.error(err.message);
