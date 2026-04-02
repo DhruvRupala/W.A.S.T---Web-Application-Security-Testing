@@ -89,7 +89,7 @@ const Footer = () => {
           </p>
           <p className="text-gray-600 text-xs font-mono flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-cyber-green animate-pulse"></span>
-            All systems operational
+            Developed by Dhruv Rupala
           </p>
         </div>
       </div>
