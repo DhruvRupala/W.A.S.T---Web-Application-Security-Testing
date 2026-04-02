@@ -1,10 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const fs = require('fs');
 const auth = require('../middleware/auth');
 const Scan = require('../models/Scan');
 const { runScan } = require('../utils/scanner');
-const path = require('path');
 
 // Get all scans for user
 router.get('/', auth, async (req, res) => {
@@ -60,25 +58,53 @@ router.post('/start', auth, async (req, res) => {
     io.emit('scan:progress', { scanId: scan._id, status: 'running', progress: 10, message: 'Initializing scanner...' });
 
     try {
-      io.emit('scan:progress', { scanId: scan._id, status: 'running', progress: 50, message: 'Scanning target headers and payloads...' });
+      io.emit('scan:progress', { scanId: scan._id, status: 'running', progress: 30, message: 'Checking target reachability...' });
+      
+      io.emit('scan:progress', { scanId: scan._id, status: 'running', progress: 50, message: 'Scanning security headers & testing payloads...' });
       
       const results = await runScan(targetUrl);
+
+      // If the scanner returned an error (target unreachable, etc.)
+      if (results.error && results.vulnerabilities.length === 0) {
+        scan.status = 'failed';
+        scan.errorMessage = results.error;
+        scan.completedAt = new Date();
+        await scan.save();
+        
+        io.emit('scan:progress', { 
+          scanId: scan._id, 
+          status: 'failed', 
+          progress: 100, 
+          message: `Scan failed: ${results.error}` 
+        });
+        io.emit('scan:completed', scan);
+        return;
+      }
       
       scan.vulnerabilities = results.vulnerabilities || [];
       scan.riskLevel = calculateRisk(scan.vulnerabilities);
       scan.status = 'completed';
       scan.completedAt = new Date();
+      
+      // Store partial failure info if some modules failed
+      if (results.partialFailure && results.error) {
+        scan.errorMessage = `Partial: ${results.error}`;
+      }
+      
       await scan.save();
 
       io.emit('scan:progress', { scanId: scan._id, status: scan.status, progress: 100, message: 'Scan complete!' });
       io.emit('scan:completed', scan);
       
     } catch (err) {
-      console.error('Failed to parse scanner output or save scan', err);
+      console.error('Scan execution error:', err);
+      const errorMsg = err.message || 'Unknown scan error';
       scan.status = 'failed';
+      scan.errorMessage = errorMsg;
       scan.completedAt = new Date();
       await scan.save();
-      io.emit('scan:progress', { scanId: scan._id, status: 'failed', progress: 100, message: 'Scan failed.' });
+      io.emit('scan:progress', { scanId: scan._id, status: 'failed', progress: 100, message: `Scan failed: ${errorMsg}` });
+      io.emit('scan:completed', scan);
     }
 
   } catch (err) {

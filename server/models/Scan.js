@@ -28,6 +28,7 @@ const scanSchema = new mongoose.Schema({
     enum: ['Secure', 'Low', 'Medium', 'High', 'Critical'],
     default: 'Secure'
   },
+  errorMessage: String,
   completedAt: Date
 }, { timestamps: true });
 

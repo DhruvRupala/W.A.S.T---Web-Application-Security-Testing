@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { Target, Zap, Shield, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
+import { Target, Zap, Shield, ChevronRight, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { API_URL } from '../config';
 
-const socket = io(import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000'));
+const socket = io(API_URL);
 
 const Scan = () => {
   const [target, setTarget] = useState('');
@@ -19,13 +20,20 @@ const Scan = () => {
     socket.on('scan:progress', (data) => {
       setProgress(data.progress);
       setStatusMsg(data.message);
+      
+      // If scan failed, stop scanning state and show error
+      if (data.status === 'failed') {
+        setScanning(false);
+      }
     });
 
     socket.on('scan:completed', (data) => {
       setScanning(false);
       setScanResult(data);
       setProgress(100);
-      setStatusMsg('Scan complete!');
+      if (data.status === 'completed') {
+        setStatusMsg('Scan complete!');
+      }
     });
 
     return () => {
@@ -48,11 +56,25 @@ const Scan = () => {
 
     setScanning(true);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/scans/start`, { targetUrl: target });
+      await axios.post(`${API_URL}/api/scans/start`, { targetUrl: target });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to start scan');
+      setError(err.response?.data?.message || 'Failed to start scan. Is the backend running?');
       setScanning(false);
     }
+  };
+
+  const getResultIcon = () => {
+    if (!scanResult) return null;
+    if (scanResult.status === 'failed') return <XCircle className="text-cyber-pink" size={24} />;
+    if (scanResult.status === 'completed') return <CheckCircle className="text-cyber-green" size={24} />;
+    return <AlertTriangle className="text-cyber-yellow" size={24} />;
+  };
+
+  const getResultLabel = () => {
+    if (!scanResult) return '';
+    if (scanResult.status === 'failed') return 'Scan Failed';
+    if (scanResult.status === 'completed') return 'Scan Complete';
+    return scanResult.status;
   };
 
   return (
@@ -80,7 +102,7 @@ const Scan = () => {
               <input
                 type="text"
                 className="cyber-input text-base sm:text-lg py-3 sm:py-4 flex-1 border-gray-700 bg-cyber-black focus:border-cyber-pink focus:ring-cyber-pink"
-                placeholder="https://vulnerable-app.local"
+                placeholder="https://example.com"
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
                 disabled={scanning}
@@ -107,7 +129,7 @@ const Scan = () => {
         </form>
 
         {/* Real-time Progress */}
-        {scanning && (
+        {(scanning || (statusMsg && !scanResult)) && (
           <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-800">
             <div className="flex justify-between items-center mb-3">
               <span className="text-xs sm:text-sm text-cyber-blue uppercase tracking-widest" style={{ fontFamily: "'Fira Code', monospace" }}>Scan Progress</span>
@@ -127,13 +149,33 @@ const Scan = () => {
         {scanResult && !scanning && (
           <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-800">
             <div className="flex items-center gap-3 mb-4">
-              {scanResult.status === 'completed' ? (
-                <CheckCircle className="text-cyber-green" size={24} />
-              ) : (
-                <XCircle className="text-cyber-pink" size={24} />
-              )}
-              <span className="text-base sm:text-lg font-bold uppercase">{scanResult.status === 'completed' ? 'Scan Complete' : 'Scan Failed'}</span>
+              {getResultIcon()}
+              <span className="text-base sm:text-lg font-bold uppercase">{getResultLabel()}</span>
             </div>
+
+            {/* Show error message for failed scans */}
+            {scanResult.status === 'failed' && scanResult.errorMessage && (
+              <div className="mb-4 p-4 border border-cyber-pink/30 bg-cyber-pink/5 rounded-sm">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="text-cyber-pink flex-shrink-0 mt-0.5" size={16} />
+                  <div>
+                    <p className="text-xs text-gray-300 font-bold uppercase mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>Failure Reason:</p>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: "'Fira Code', monospace" }}>{scanResult.errorMessage}</p>
+                    <p className="text-[10px] text-gray-500 mt-2" style={{ fontFamily: "'Fira Code', monospace" }}>
+                      💡 Tip: If you're on Render's free tier, outbound requests may be restricted. Try running the scan locally for full functionality.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Show failure from status message if no scanResult.errorMessage */}
+            {scanResult.status === 'failed' && !scanResult.errorMessage && statusMsg && (
+              <div className="mb-4 p-4 border border-cyber-pink/30 bg-cyber-pink/5 rounded-sm">
+                <p className="text-xs text-gray-400" style={{ fontFamily: "'Fira Code', monospace" }}>{statusMsg}</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
               <div className="p-3 border border-gray-800 bg-cyber-black">
                 <span className="block text-xs text-gray-500" style={{ fontFamily: "'Fira Code', monospace" }}>RISK</span>
@@ -160,7 +202,7 @@ const Scan = () => {
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-800">
           <h4 className="text-cyber-blue uppercase text-xs sm:text-sm mb-4 sm:mb-6 pb-2 border-b border-gray-800 inline-block" style={{ fontFamily: "'Fira Code', monospace" }}>Active Modules</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {['XSS Injector', 'SQLi Scanner', 'Port Discovery', 'Security Headers'].map(mod => (
+            {['XSS Injector', 'Security Headers', 'Cookie Analysis', 'Info Disclosure'].map(mod => (
               <div key={mod} className="flex items-center gap-3 p-3 bg-cyber-black border border-gray-800 rounded-sm">
                 <div className="w-2 h-2 rounded-full bg-cyber-green animate-pulse flex-shrink-0"></div>
                 <span className="text-xs sm:text-sm text-gray-300" style={{ fontFamily: "'Fira Code', monospace" }}>{mod}</span>

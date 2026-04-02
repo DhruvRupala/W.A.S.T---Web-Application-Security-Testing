@@ -14,15 +14,28 @@ const pdfRoutes = require('./routes/pdf');
 const app = express();
 const server = http.createServer(app);
 
-// CORS Configuration — set CORS_ORIGIN in production to your Vercel URL
-// e.g., CORS_ORIGIN=https://wastp.vercel.app
-const allowedOrigin = process.env.CORS_ORIGIN || 'https://wastp.vercel.app';
+// CORS Configuration — supports multiple origins for local + production
+const allowedOrigins = [
+  process.env.CORS_ORIGIN,
+  'https://wastp.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000'
+].filter(Boolean); // Remove undefined values
 
 const io = new Server(server, {
-  cors: { origin: allowedOrigin }
+  cors: { origin: allowedOrigins }
 });
 
-app.use(cors({ origin: allowedOrigin }));
+app.use(cors({ 
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  }
+}));
 app.use(express.json());
 
 // Rate limiters for auth endpoints (brute-force protection)
@@ -49,6 +62,11 @@ const registerLimiter = rateLimit({
 
 // Make io accessible to routes
 app.set('io', io);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -78,4 +96,5 @@ mongoose.connect(process.env.MONGO_URI)
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Allowed CORS origins: ${allowedOrigins.join(', ')}`);
 });

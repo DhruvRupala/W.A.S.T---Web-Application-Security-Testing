@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { ShieldAlert, Terminal, AlertOctagon, Info, FileWarning, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShieldAlert, Terminal, AlertOctagon, Info, FileWarning, Download, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
+import { API_URL } from '../config';
 
 const Reports = () => {
   const [scans, setScans] = useState([]);
@@ -11,7 +12,7 @@ const Reports = () => {
 
   const fetchScans = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/scans`);
+      const res = await axios.get(`${API_URL}/api/scans`);
       setScans(res.data);
       if (res.data.length > 0) setSelectedScan(res.data[0]);
     } catch (err) { console.error(err); }
@@ -20,7 +21,7 @@ const Reports = () => {
   const downloadPDF = async (scanId) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/pdf/${scanId}`, {
+      const res = await axios.get(`${API_URL}/api/pdf/${scanId}`, {
         responseType: 'blob', headers: { Authorization: `Bearer ${token}` }
       });
       const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -110,6 +111,20 @@ const Reports = () => {
               ))}
             </div>
           </div>
+
+          {/* Error message for failed scans */}
+          {selectedScan.status === 'failed' && selectedScan.errorMessage && (
+            <div className="mx-4 sm:mx-6 mt-4 p-4 border border-cyber-pink/30 bg-cyber-pink/5">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="text-cyber-pink flex-shrink-0 mt-0.5" size={16} />
+                <div>
+                  <p className="text-xs text-gray-300 font-bold uppercase mb-1 font-mono">Failure Reason:</p>
+                  <p className="text-xs text-gray-400 font-mono">{selectedScan.errorMessage}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-cyber-black/50 space-y-4">
             <h3 className="font-bold uppercase tracking-widest text-base flex items-center gap-2 mb-3"><FileWarning className="text-cyber-pink" /> Vulnerability Report</h3>
             {selectedScan.vulnerabilities?.length > 0 ? selectedScan.vulnerabilities.map((v, i) => (

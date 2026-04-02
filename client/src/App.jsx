@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import axios from 'axios';
 import { Menu } from 'lucide-react';
 import { AuthContext } from './context/AuthContext';
+import { API_URL } from './config';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -46,7 +47,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 const RouteTracker = () => {
   const location = useLocation();
   useEffect(() => {
-    axios.post(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/admin/system/visits`, { path: location.pathname })
+    axios.post(`${API_URL}/api/admin/system/visits`, { path: location.pathname })
       .catch(() => {});
   }, [location]);
   return null;

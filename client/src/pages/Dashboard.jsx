@@ -3,6 +3,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Activity, ShieldAlert, AlertTriangle, CheckCircle } from 'lucide-react';
+import { API_URL } from '../config';
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
@@ -11,7 +12,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchScans = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000')}/api/scans`);
+        const res = await axios.get(`${API_URL}/api/scans`);
         const scans = res.data;
         let c = 0, h = 0, m = 0, l = 0;
         scans.forEach(s => {

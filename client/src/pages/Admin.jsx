@@ -3,8 +3,9 @@ import axios from 'axios';
 import { Users, Activity, ShieldAlert, Trash2, Crown, BarChart3, LineChart as LineChartIcon, List } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid, Legend } from 'recharts';
 import { io } from 'socket.io-client';
+import { API_URL } from '../config';
 
-const API = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://wast-backend.onrender.com' : 'http://localhost:5000');
+const API = API_URL;
 
 const Admin = () => {
   const [stats, setStats] = useState(null);
